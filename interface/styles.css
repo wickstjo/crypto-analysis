@@ -1,0 +1,26 @@
+@font-face {
+	font-family: 'Open Sans';
+	src: url('fonts/main.woff');
+}
+
+body {
+   background: url('img/bg.png');
+   font: 13px 'Open Sans', verdana;
+	color: #505050;
+	margin: 0px;
+	padding: 30px;
+}
+
+#linechart, #barchart, #boxplot {
+   background: url('img/pattern.png');
+   font: 13px 'Open Sans', verdana;
+   border: 4px solid white;
+   color: #505050;
+   padding: 0px;
+   margin: 0px;
+   margin-bottom: 20px;
+}
+
+#boxplot {
+   margin: 0px;
+}
