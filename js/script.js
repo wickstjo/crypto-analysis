@@ -1,3 +1,6 @@
+// https://beta.observablehq.com/@mbostock/d3-area-chart
+// CHANGE LINE GRAPHS TO AREA GRAPHS
+
 // SET QUERY PROPS
 var data = {
    from: 'ETH',
@@ -12,40 +15,32 @@ var query = 'https://min-api.cryptocompare.com/data/histoday?fsym=' + data.from 
 d3.json(query).then((response) => {
 
    // SET CHILD CONTAINERS
-   data.daily = {
+   data = {
       sold: [],
-      exchange: [0] // SET ZERO AS STARTING COORDINATE FOR LINE CHART
-   };
-
-   data.ranges = {
-      highest: [],
-      lowest: [],
-      lengths: []
+      exchange: [0], // SET ZERO AS STARTING COORDINATE FOR LINE CHART
+      avg: [0],
+      paths: {},
+      query: {
+            from: response.TimeFrom,
+            to: response.TimeTo
+      }
    };
 
    // SET RELEVANT DATA TO MAIN OBJECT
    for (var x = 0; x < response.Data.length; x++) {
-      data.daily.sold.push(response.Data[x].volumefrom);
-      data.daily.exchange.push(response.Data[x].volumeto);
-
-      data.ranges.highest.push(response.Data[x].high);
-      data.ranges.lowest.push(response.Data[x].low);
-      data.ranges.lengths.push(response.Data[x].high - response.Data[x].low);
+      data.sold.push(response.Data[x].volumefrom);
+      data.exchange.push(response.Data[x].volumeto);
+      data.avg.push((response.Data[x].high + response.Data[x].low) / 2);
    }
 
    // REMOVE LAST ELEMENT, IE TODAYS DATA, FOR READABILITY
-   data.daily.exchange.pop()
-   data.daily.sold.pop()
-   data.ranges.highest.pop()
-   data.ranges.lowest.pop()
-   data.ranges.lengths.pop()
+   data.exchange.pop()
+   data.sold.pop()
+   data.avg.pop()
 
-   // FIND & SET HIGHEST AND LOWEST VALUES IN RANGES FOR SCALING
-   data.ranges.lowest = d3.min(data.ranges.lowest);
-   data.ranges.highest = d3.max(data.ranges.highest);
-
-   // PUSH IN ENDING COORDINATE FOR LINE CHART
-   data.daily.exchange.push(0)
+   // PUSH IN ENDING COORDINATE FOR LINE CHARTS
+   data.exchange.push(0);
+   data.avg.push(0);
 
    // APPEND IN BOXES FOR THE GRAPHS
    $('body').append('<div id="linechart"></div>');
@@ -69,14 +64,16 @@ d3.json(query).then((response) => {
       padding: 10
    }
 
+                                                                                 // LINE CHART STARTS
+
    // Y-SCALING -- BASED ON OVERALL HIGHEST VALUE
    var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data.daily.exchange)])
+      .domain([0, d3.max(data.exchange)])
       .range([0, settings.height])
 
    // X-SCALING
    var xScale = d3.scaleLinear()
-      .domain([0, data.daily.exchange.length - 1])
+      .domain([0, data.exchange.length - 1])
       .rangeRound([0, settings.width])
 
    // GENERATE PATH METHOD
@@ -86,10 +83,7 @@ d3.json(query).then((response) => {
       .curve(d3.curveBasis)
 
    // CONVERT XY OBJECTS INTO D3 PATHS
-   data.path = pathify(data.daily.exchange);
-   log(data)
-
-                                                                                 // LINE CHART STARTS
+   data.paths.exchange = pathify(data.exchange);
 
    // GENERATE GRAPH CANVAS
    var canvas = d3.select('#linechart').append('svg')
@@ -104,19 +98,19 @@ d3.json(query).then((response) => {
       .attr('stroke', settings.border.color)
       .attr('stroke-width', settings.border.size)
       .attr('opacity', settings.opacity)
-      .attr('d', data.path)
+      .attr('d', data.paths.exchange)
 
                                                                                  // LINE CHART ENDS
                                                                                  // BAR CHART STARTS
 
    // ADD LINEAR SCALING
    var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data.daily.sold)])
+      .domain([0, d3.max(data.sold)])
       .range([0, settings.height])
 
    // ADD ORDINAL SCALING
    var xScale = d3.scaleBand()
-      .domain(data.daily.sold)
+      .domain(data.sold)
       .range([0, settings.width])
       .paddingInner(settings.padding / 100)
 
@@ -129,7 +123,7 @@ d3.json(query).then((response) => {
       .style('background', settings.background)
 
       // GENERATE 'BARS' BY LOOPING THROUGH DATA
-      canvas.selectAll('bars').data(data.daily.sold).enter()
+      canvas.selectAll('bars').data(data.sold).enter()
 
          // ADD CUSTOMIZED PROPERTIES
          .append('rect')
@@ -145,38 +139,41 @@ d3.json(query).then((response) => {
                                                                                  // BAR CHART ENDS
                                                                                  // BOX PLOT STARTS
 
-      // ADD LINEAR SCALING
+      // Y-SCALING -- BASED ON OVERALL HIGHEST VALUE
       var yScale = d3.scaleLinear()
-         .domain([0, d3.max(data.ranges.lengths)])
-         .range([0, settings.height])
+            .domain([0, d3.max(data.avg)])
+            .range([0, settings.height])
 
-      // ADD ORDINAL SCALING
-      var xScale = d3.scaleBand()
-         .domain(data.ranges.lengths)
-         .range([0, settings.width])
-         .paddingInner(settings.padding / 100)
+      // X-SCALING
+      var xScale = d3.scaleLinear()
+            .domain([0, data.avg.length - 1])
+            .rangeRound([0, settings.width])
 
-      // GENERATE CANVAS
+      // GENERATE PATH METHOD
+      var pathify = d3.line()
+            .x((data, i) => { return xScale(i) })
+            .y((data) => { return settings.height - yScale(data) })
+            .curve(d3.curveBasis)
+
+      // CONVERT XY OBJECTS INTO D3 PATHS
+      data.paths.avg = pathify(data.avg);
+
+      // GENERATE GRAPH CANVAS
       var canvas = d3.select('#boxplot').append('svg')
 
-         // ADD CUSTOMIZED PROPERTIES
-         .attr('width', settings.width)
-         .attr('height', settings.height)
-         .style('background', settings.background)
-
-         // GENERATE 'BARS' BY LOOPING THROUGH DATA
-         canvas.selectAll('bars').data(data.ranges.lengths).enter()
-
             // ADD CUSTOMIZED PROPERTIES
-            .append('rect')
-            .attr('width', xScale.bandwidth())
-            .attr('height', (d) => { return yScale(d); })
-            .attr('x', (d) => { return xScale(d); })
-            .attr('y', (d) => { return settings.height - yScale(d); })
+            .attr('width', settings.width)
+            .attr('height', settings.height)
+
+      // SET PATH
+      canvas.append('path')
             .attr('fill', settings.background.green)
             .attr('stroke', settings.border.color)
             .attr('stroke-width', settings.border.size)
             .attr('opacity', settings.opacity)
+            .attr('d', data.paths.avg)
 
       // BOX PLOT ENDS
+
+      log(data)
 });
