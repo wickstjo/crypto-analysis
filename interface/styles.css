@@ -1,8 +1,3 @@
-@font-face {
-	font-family: 'Open Sans';
-	src: url('fonts/main.woff');
-}
-
 body {
    background: url('img/bg.png');
    font: 13px 'Open Sans', verdana;
