@@ -1,127 +1,102 @@
-// SET QUERY PROPS
-var data = {
-   from: 'ETH',
-   to: 'EUR',
-   days: 50
+// QUERY PROPS
+var query = {
+   currency: {
+      from: 'ETH',
+      to: 'BTC'
+   },
+   days: 50,
+   timestamp: {
+      from: 0,
+      to: 0
+   }
 }
 
-// STITCH QUERY STRING TOGETHER
-var query = 'https://min-api.cryptocompare.com/data/histoday?fsym=' + data.from + '&tsym=' + data.to + '&limit=' + data.days;
+// DATA PROPS
+var data = {
+   raw: {},
+   exchange: [],
+   sold: [],
+   spread: {
+      avg: [],
+      size: []
+   },
+   paths: {}
+}
 
-// WAIT FOR PROMISE TO RESOLVE
-d3.json(query).then((response) => {
+// WAIT FOR PROMISE QUERY TO RESOLVE
+d3.json('https://min-api.cryptocompare.com/data/histoday?fsym=' + query.currency.from + '&tsym=' + query.currency.to + '&limit=' + query.days).then((response) => {
 
-   // SET CHILD CONTAINERS
-   data.daily = {
-      sold: [],
-      exchange: [0] // SET ZERO AS STARTING COORDINATE FOR LINE CHART
-   };
-
-   data.ranges = {
-      highest: [],
-      lowest: [],
-      lengths: []
-   };
+   // SAVE RAW RESPONSE & TIMESTAMPS
+   data.raw = response;
+   query.timestamp.from = response.TimeFrom;
+   query.timestamp.to = response.TimeTo;
 
    // SET RELEVANT DATA TO MAIN OBJECT
    for (var x = 0; x < response.Data.length; x++) {
-      data.daily.sold.push(response.Data[x].volumefrom);
-      data.daily.exchange.push(response.Data[x].volumeto);
+      data.sold.push(response.Data[x].volumefrom);
+      data.exchange.push(response.Data[x].volumeto);
 
-      data.ranges.highest.push(response.Data[x].high);
-      data.ranges.lowest.push(response.Data[x].low);
-      data.ranges.lengths.push(response.Data[x].high - response.Data[x].low);
+      data.spread.avg.push((response.Data[x].high + response.Data[x].low) / 2);
+      data.spread.size.push(response.Data[x].high + response.Data[x].low);
    }
 
    // REMOVE LAST ELEMENT, IE TODAYS DATA, FOR READABILITY
-   data.daily.exchange.pop()
-   data.daily.sold.pop()
-   data.ranges.highest.pop()
-   data.ranges.lowest.pop()
-   data.ranges.lengths.pop()
-
-   // FIND & SET HIGHEST AND LOWEST VALUES IN RANGES FOR SCALING
-   data.ranges.lowest = d3.min(data.ranges.lowest);
-   data.ranges.highest = d3.max(data.ranges.highest);
-
-   // PUSH IN ENDING COORDINATE FOR LINE CHART
-   data.daily.exchange.push(0)
+   data.exchange.pop()
+   data.sold.pop()
+   data.spread.avg.pop()
+   data.spread.size.pop()
 
    // APPEND IN BOXES FOR THE GRAPHS
-   $('body').append('<div id="linechart"></div>');
-   $('body').append('<div id="barchart"></div>');
-   $('body').append('<div id="boxplot"></div>');
+   $('body').append('<div id="exchange"></div>');
+   $('body').append('<div id="sold"></div>');
+   $('body').append('<div id="spread"></div>');
 
    // SETTINGS OBJECT
    var settings = {
-      width: $('#linechart').width(),
+      width: $('#exchange').width(),
       height: (window.innerHeight - 60 - 40 - 24) / 3,
       border: {
          color: 'white',
-         size: 1
+         size: 0
       },
       background: {
          red: '#D86666',
          green: '#5ECA66',
          blue: '#7D84DA'
       },
-      opacity: 0.8,
+      opacity: 0.6,
       padding: 10
    }
 
-   // Y-SCALING -- BASED ON OVERALL HIGHEST VALUE
-   var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data.daily.exchange)])
-      .range([0, settings.height])
+   // GENERATE AREA PATH FOR DAILY EXCHANGE AMOUNTS
+   data = arealize(data, settings);
 
-   // X-SCALING
-   var xScale = d3.scaleLinear()
-      .domain([0, data.daily.exchange.length - 1])
-      .rangeRound([0, settings.width])
+      // GENERATE CANVAS
+      var canvas = d3.select('#exchange').append('svg')
+         .attr('width', settings.width)
+         .attr('height', settings.height)
 
-   // GENERATE PATH METHOD
-   var pathify = d3.line()
-      .x((data, i) => { return xScale(i) })
-      .y((data) => { return settings.height - yScale(data) })
-      .curve(d3.curveBasis)
-
-   // CONVERT XY OBJECTS INTO D3 PATHS
-   data.path = pathify(data.daily.exchange);
-   log(data)
-
-                                                                                 // LINE CHART STARTS
-
-   // GENERATE GRAPH CANVAS
-   var canvas = d3.select('#linechart').append('svg')
-
-      // ADD CUSTOMIZED PROPERTIES
-      .attr('width', settings.width)
-      .attr('height', settings.height)
-
-   // SET PATH
-   canvas.append('path')
-      .attr('fill', settings.background.red)
-      .attr('stroke', settings.border.color)
-      .attr('stroke-width', settings.border.size)
-      .attr('opacity', settings.opacity)
-      .attr('d', data.path)
-
-                                                                                 // LINE CHART ENDS
-                                                                                 // BAR CHART STARTS
+      // GENERATE AREA
+      canvas.append('path')
+         .attr('fill', settings.background.red)
+         .attr('stroke', settings.border.color)
+         .attr('stroke-width', settings.border.size)
+         .attr('opacity', settings.opacity)
+         .attr('d', data.paths.exchange)
 
    // ADD LINEAR SCALING
    var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data.daily.sold)])
+      .domain([0, d3.max(data.sold)])
       .range([0, settings.height])
 
    // ADD ORDINAL SCALING
    var xScale = d3.scaleBand()
-      .domain(data.daily.sold)
+      .domain(data.sold)
       .range([0, settings.width])
       .paddingInner(settings.padding / 100)
 
    // GENERATE CANVAS
-   var canvas = d3.select('#barchart').append('svg')
+   var canvas = d3.select('#sold').append('svg')
 
       // ADD CUSTOMIZED PROPERTIES
       .attr('width', settings.width)
@@ -129,7 +104,7 @@ d3.json(query).then((response) => {
       .style('background', settings.background)
 
       // GENERATE 'BARS' BY LOOPING THROUGH DATA
-      canvas.selectAll('bars').data(data.daily.sold).enter()
+      canvas.selectAll('bars').data(data.sold).enter()
 
          // ADD CUSTOMIZED PROPERTIES
          .append('rect')
@@ -142,41 +117,22 @@ d3.json(query).then((response) => {
          .attr('stroke-width', settings.border.size)
          .attr('opacity', settings.opacity)
 
-                                                                                 // BAR CHART ENDS
-                                                                                 // BOX PLOT STARTS
+   // GENERATE LINE PATH FOR AVERAGE DAILY SPREAD
+   data = lineify(data, settings);
 
-      // ADD LINEAR SCALING
-      var yScale = d3.scaleLinear()
-         .domain([0, d3.max(data.ranges.lengths)])
-         .range([0, settings.height])
-
-      // ADD ORDINAL SCALING
-      var xScale = d3.scaleBand()
-         .domain(data.ranges.lengths)
-         .range([0, settings.width])
-         .paddingInner(settings.padding / 100)
-
-      // GENERATE CANVAS
-      var canvas = d3.select('#boxplot').append('svg')
-
-         // ADD CUSTOMIZED PROPERTIES
+      // GENERATE GRAPH CANVAS
+      var canvas = d3.select('#spread').append('svg')
          .attr('width', settings.width)
          .attr('height', settings.height)
-         .style('background', settings.background)
 
-         // GENERATE 'BARS' BY LOOPING THROUGH DATA
-         canvas.selectAll('bars').data(data.ranges.lengths).enter()
+      // SET PATH
+      canvas.append('path')
+         .attr('fill', 'none')
+         .attr('stroke', settings.background.green)
+         .attr('stroke-width', 3)
+         .attr('opacity', settings.opacity)
+         .attr('d', data.paths.spread)
 
-            // ADD CUSTOMIZED PROPERTIES
-            .append('rect')
-            .attr('width', xScale.bandwidth())
-            .attr('height', (d) => { return yScale(d); })
-            .attr('x', (d) => { return xScale(d); })
-            .attr('y', (d) => { return settings.height - yScale(d); })
-            .attr('fill', settings.background.green)
-            .attr('stroke', settings.border.color)
-            .attr('stroke-width', settings.border.size)
-            .attr('opacity', settings.opacity)
-
-      // BOX PLOT ENDS
+   log(data)
+   log(query)
 });

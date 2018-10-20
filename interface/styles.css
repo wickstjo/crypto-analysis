@@ -11,7 +11,7 @@ body {
 	padding: 30px;
 }
 
-#linechart, #barchart, #boxplot {
+#exchange, #sold, #spread {
    background: url('img/pattern.png');
    font: 13px 'Open Sans', verdana;
    border: 4px solid white;
@@ -21,6 +21,6 @@ body {
    margin-bottom: 20px;
 }
 
-#boxplot {
+#spread {
    margin: 0px;
 }
