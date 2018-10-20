@@ -125,13 +125,16 @@ function spread(data, settings) {
      .attr('d', data.paths.spread)
 
    // GENERATE DOTS FOR BREAKPOINTS
-   canvas.selectAll('circle')
-     .data(data.spread.avg)
-        .enter().append('circle')
-           .attr('cx', (data, i) => { return xScale(i) })
-           .attr('cy', (data) => { return settings.height - yScale(data) })
-           .attr('r', settings.radius)
-           .attr('fill', settings.dot.blue)
+   canvas.selectAll('line')
+     .data(data.spread.size)
+        .enter().append('line')
+            .attr('x1', (d, i) => { return xScale(i) })
+            .attr('y1', (d, i) => { return settings.height - yScale(data.spread.avg[i] - d) })
+            .attr('x2', (d, i) => { return xScale(i) })
+            .attr('y2', (d, i) => { return settings.height - yScale(data.spread.avg[i] + d) })
+            .attr('stroke', settings.background.blue)
+            .attr('stroke-width', settings.border.size)
+            .attr('opacity', settings.opacity)
 
    // RETURN UPDATED DATA OBJECT
    return data;
