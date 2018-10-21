@@ -1,16 +1,3 @@
-// QUERY OBJECT
-var query = {
-   currency: {
-      from: 'ETH',
-      to: 'EUR'
-   },
-   days: 100,
-   timestamp: {
-      from: 0,
-      to: 0
-   }
-}
-
 // DATA OBJECT
 var data = {
    raw: {},
@@ -20,16 +7,27 @@ var data = {
       avg: [],
       size: []
    },
-   paths: {}
+   paths: {},
+   query: {
+      currency: {
+         from: 'ETH',
+         to: 'EUR'
+      },
+      days: 75,
+      timestamp: {
+         from: 0,
+         to: 0
+      }
+   }
 }
 
 // WAIT FOR PROMISE QUERY TO RESOLVE
-d3.json('https://min-api.cryptocompare.com/data/histoday?fsym=' + query.currency.from + '&tsym=' + query.currency.to + '&limit=' + query.days).then((response) => {
+d3.json('https://min-api.cryptocompare.com/data/histoday?fsym=' + data.query.currency.from + '&tsym=' + data.query.currency.to + '&limit=' + data.query.days).then((response) => {
 
    // SAVE RAW RESPONSE & TIMESTAMPS
    data.raw = response;
-   query.timestamp.from = response.TimeFrom;
-   query.timestamp.to = response.TimeTo;
+   data.query.timestamp.from = response.TimeFrom;
+   data.query.timestamp.to = response.TimeTo;
 
    // APPEND IN DIVS FOR THE GRAPHS
    $('body').append('<div id="exchange"></div>');
@@ -42,20 +40,26 @@ d3.json('https://min-api.cryptocompare.com/data/histoday?fsym=' + query.currency
       height: (window.innerHeight - 60 - 40 - 24) / 3,
       border: {
          color: '#7D84DA',
-         size: 4
+         size: {
+            large: 6,
+            medium: 5,
+            small: 3
+         }
       },
       background: {
-         red: '#D86666',
-         green: '#5ECA66',
-         blue: '#7D84DA'
+         exchange: '#D86666',
+         sold: '#5ECA66'
       },
       dot: {
-         red: '#D86666',
-         green: '#5ECA66',
-         blue: '#7D84DA'
+         exchange: '#D86666',
+         sold: '#5ECA66'
+      },
+      radius: {
+         large: 5,
+         medium: 2.5,
+         small: 1.5
       },
       opacity: 0.6,
-      radius: 2.5,
       multiplier: 1.02
    }
 
@@ -74,10 +78,8 @@ d3.json('https://min-api.cryptocompare.com/data/histoday?fsym=' + query.currency
    data.spread.size.pop();
 
    // GENERATE CHARTS & RETURN UPDATED DATA OBJECT
-   data = exchange(data, settings);
-   data = sold(data, settings);
+   data = modules(data, settings);
    data = spread(data, settings);
 
    log(data)
-   log(query)
 });

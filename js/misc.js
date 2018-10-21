@@ -1,90 +1,54 @@
 // GENERATE EXCHANGE CHART & UPDATE DATA OBJECT
-function exchange(data, settings) {
+function modules(data, settings) {
 
-   // Y-SCALING
-   var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data.exchange) * settings.multiplier])
-      .range([0, settings.height])
+   // ESTABLISH CHART MODULES
+   var modules = ['exchange', 'sold'];
 
-   // X-SCALING
-   var xScale = d3.scaleTime()
-      .domain([0, data.exchange.length - 1])
-      .rangeRound([0, settings.width])
+   // FETCH DOT SIZE BASED ON QUERY LIMIT
+   var dot = dotsize(data, settings);
 
-   // GENERATE PATH METHOD
-   var pathify = d3.area()
-      .x((data, i) => { return xScale(i) })
-      .y0(settings.height - yScale(0))
-      .y1((data) => { return settings.height - yScale(data) })
+   // LOOP THROUGH AND BUILD CHART
+   modules.forEach(mod => {
 
-   // CONVERT XY OBJECTS INTO D3 PATHS
-   data.paths.exchange = pathify(data.exchange);
+      // Y-SCALING
+      var yScale = d3.scaleLinear()
+         .domain([0, d3.max(data[mod]) * settings.multiplier])
+         .range([0, settings.height])
 
-   // GENERATE CANVAS
-   var canvas = d3.select('#exchange').append('svg')
-      .attr('width', settings.width)
-      .attr('height', settings.height)
+      // X-SCALING
+      var xScale = d3.scaleTime()
+         .domain([0, data[mod].length - 1])
+         .rangeRound([0, settings.width])
 
-   // GENERATE AREA
-   canvas.append('path')
-      .attr('fill', settings.background.red)
-      .attr('opacity', settings.opacity)
-      .attr('d', data.paths.exchange)
+      // GENERATE PATH METHOD
+      var pathify = d3.area()
+         .x((data, i) => { return xScale(i) })
+         .y0(settings.height - yScale(0))
+         .y1((data) => { return settings.height - yScale(data) })
 
-   // GENERATE DOTS FOR BREAKPOINTS
-   canvas.selectAll('circle')
-      .data(data.exchange)
-         .enter().append('circle')
-            .attr('cx', (data, i) => { return xScale(i) })
-            .attr('cy', (data) => { return settings.height - yScale(data) })
-            .attr('r', settings.radius)
-            .attr('fill', settings.dot.red)
+      // CONVERT XY OBJECTS INTO D3 PATHS
+      data.paths[mod] = pathify(data[mod]);
 
-   // RETURN UPDATED DATA OBJECT
-   return data;
-}
+      // GENERATE CANVAS
+      var canvas = d3.select('#' + mod).append('svg')
+         .attr('width', settings.width)
+         .attr('height', settings.height)
 
-// GENERATE SOLD CHART & UPDATE DATA OBJECT
-function sold(data, settings) {
+      // GENERATE AREA
+      canvas.append('path')
+         .attr('fill', settings.background[mod])
+         .attr('opacity', settings.opacity)
+         .attr('d', data.paths[mod])
 
-   // Y-SCALING -- BASED ON OVERALL HIGHEST VALUE
-   var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data.sold) * settings.multiplier])
-      .range([0, settings.height])
-
-   // X-SCALING
-   var xScale = d3.scaleTime()
-      .domain([0, data.sold.length - 1])
-      .rangeRound([0, settings.width])
-
-   // GENERATE PATH METHOD
-   var pathify = d3.area()
-      .x((data, i) => { return xScale(i) })
-      .y0(settings.height - yScale(0))
-      .y1((data) => { return settings.height - yScale(data) })
-
-   // CONVERT XY OBJECTS INTO D3 PATHS
-   data.paths.sold = pathify(data.sold);
-   
-   // GENERATE CANVAS
-   var canvas = d3.select('#sold').append('svg')
-      .attr('width', settings.width)
-      .attr('height', settings.height)
-
-   // GENERATE AREA
-   canvas.append('path')
-      .attr('fill', settings.background.green)
-      .attr('opacity', settings.opacity)
-      .attr('d', data.paths.sold)
-
-   // GENERATE DOTS FOR BREAKPOINTS
-   canvas.selectAll('circle')
-      .data(data.sold)
-         .enter().append('circle')
-            .attr('cx', (data, i) => { return xScale(i) })
-            .attr('cy', (data) => { return settings.height - yScale(data) })
-            .attr('r', settings.radius)
-            .attr('fill', settings.dot.green)
+      // GENERATE DOTS FOR BREAKPOINTS
+      canvas.selectAll('circle')
+         .data(data[mod])
+            .enter().append('circle')
+               .attr('cx', (data, i) => { return xScale(i) })
+               .attr('cy', (data) => { return settings.height - yScale(data) })
+               .attr('r', dot)
+               .attr('fill', settings.dot[mod])
+      });
 
    // RETURN UPDATED DATA OBJECT
    return data;
@@ -93,9 +57,12 @@ function sold(data, settings) {
 // GENERATE LINE PATH
 function spread(data, settings) {
 
+   // FETCH LINE SIZE BASED ON QUERY LIMIT
+   var line = linesize(data, settings);
+   
    // Y-SCALING
    var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data.spread.avg) * 1.2])
+      .domain([0, d3.max(data.spread.avg) * 1.5])
       .range([0, settings.height])
 
    // X-SCALING
@@ -111,16 +78,16 @@ function spread(data, settings) {
    // CONVERT XY OBJECTS INTO D3 PATHS
    data.paths.spread = pathify(data.spread.avg);
    
-  // GENERATE GRAPH CANVAS
-  var canvas = d3.select('#spread').append('svg')
-  .attr('width', settings.width)
-  .attr('height', settings.height)
+   // GENERATE GRAPH CANVAS
+   var canvas = d3.select('#spread').append('svg')
+      .attr('width', settings.width)
+      .attr('height', settings.height)
 
   // GENERATE PATH
   canvas.append('path')
      .attr('fill', 'none')
      .attr('stroke', settings.border.color)
-     .attr('stroke-width', settings.border.size)
+     .attr('stroke-width', line)
      .attr('opacity', settings.opacity)
      .attr('d', data.paths.spread)
 
@@ -129,15 +96,43 @@ function spread(data, settings) {
      .data(data.spread.size)
         .enter().append('line')
             .attr('x1', (d, i) => { return xScale(i) })
-            .attr('y1', (d, i) => { return settings.height - yScale(data.spread.avg[i] - d) })
+            .attr('y1', (d, i) => { return settings.height - yScale(data.spread.avg[i] - (d * 1.5)) })
             .attr('x2', (d, i) => { return xScale(i) })
-            .attr('y2', (d, i) => { return settings.height - yScale(data.spread.avg[i] + d) })
-            .attr('stroke', settings.background.blue)
-            .attr('stroke-width', settings.border.size)
+            .attr('y2', (d, i) => { return settings.height - yScale(data.spread.avg[i] + (d * 1.5)) })
+            .attr('stroke', settings.border.color)
+            .attr('stroke-width', line)
             .attr('opacity', settings.opacity)
 
    // RETURN UPDATED DATA OBJECT
    return data;
+}
+
+// FIGURE OUT DOTSIZE BASED ON QUERY LIMIT
+function dotsize(data, settings) {
+
+   var size = settings.radius.small;
+
+   if (data.query.days < 151) {
+      size = settings.radius.medium;
+      if (data.query.days < 51) { size = settings.radius.large; }
+   }
+
+   return size;
+}
+
+// FIGURE OUT LINE SIZE BASED ON QUERY LIMIT FOR SPREAD CHART
+function linesize(data, settings) {
+
+   var size = settings.border.size.small;
+
+   if (data.query.days < 151) {
+
+      size = settings.border.size.medium;
+      if (data.query.days < 51) { size = settings.border.size.large } 
+
+   }
+
+   return size;
 }
 
 // SHORTHAND FOR CONSOLE LOGGING
