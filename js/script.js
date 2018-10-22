@@ -13,7 +13,7 @@ var data = {
          from: 'ETH',
          to: 'EUR'
       },
-      days: 150,
+      days: 90,
       timestamp: {
          from: 0,
          to: 0

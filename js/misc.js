@@ -171,6 +171,9 @@ function formatnum(num, currency) {
    // IF OVER A THOUSAND, DIVIDE AND ADD 'K'
    if (num > 999) { num = Math.ceil(num / 1000) + 'K'; }
 
+   // ADD THOUSAND SEPARATOR
+   num = String(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
    // ADD APPROPRIATE CURRENCY SUFFIX & RETURN
    num = num + ' ' + currency.toUpperCase();
    return num;
