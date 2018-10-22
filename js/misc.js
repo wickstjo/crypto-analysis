@@ -66,9 +66,9 @@ function modules(data, settings) {
                .on('mouseover', function(d) {
                   d3.select(this).attr("r", dot * 3)
                   $('#tooltip').html(formatnum(d, mod[1]))
-                  $('#tooltip').css('opacity', 1)
                   $('#tooltip').css('left', d3.event.pageX - ($('#tooltip').width() / 1.5) + 'px')
                   $('#tooltip').css('top', d3.event.pageY + 20 + 'px')
+                  $('#tooltip').css('opacity', 1)
                }) 
                .on('mouseout', function() {
                   d3.select(this).attr("r", dot)
@@ -131,13 +131,13 @@ function spread(data, settings) {
             .style('transition', '.2s')
 
             // MOUSEOVER/OUT CONFIG
-            .on('mouseover', function(d) {
+            .on('mouseover', (d) => {
                $('#tooltip').html(textify(d))
-               $('#tooltip').css('opacity', 1)
                $('#tooltip').css('left', d3.event.pageX - ($('#tooltip').width() / 1.5) + 'px')
                $('#tooltip').css('top', d3.event.pageY + 20 + 'px')
+               $('#tooltip').css('opacity', 1)
             }) 
-            .on('mouseout', function() { $('#tooltip').css('opacity', 0) })
+            .on('mouseout', () => { $('#tooltip').css('opacity', 0); })
 
    // RETURN UPDATED DATA OBJECT
    return data;
@@ -158,6 +158,10 @@ function textify(stats) {
          <tr>
             <td>Low:</td>
             <td>` + stats.low.toFixed(2) + `</td>
+         </tr>
+         <tr>
+            <td>Size:</td>
+            <td>` + stats.difference.toFixed(2) + `</td>
          </tr>
       </table>
    `;
@@ -205,6 +209,30 @@ function linesize(data, settings) {
    }
 
    return size;
+}
+
+// WAIT FOR X MS FUNCTION
+function sleep (time) {
+   return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+// CONVERT FULL CURRENCY NAME TO SHORTHAND
+function convert(currency) {
+
+   // FORCE LOWERCASE
+   currency = currency.toLowerCase();
+
+   // WHITELISTED CURRENCIES
+   var whitelist = {
+      ethereum: 'ETH',
+      bitcoin: 'BTC',
+      euro: 'EUR',
+      dollar: 'USD'
+   }
+
+   // FETCH SHORTHAND & RETURN
+   var shorthand = whitelist[currency];
+   return shorthand;
 }
 
 // SHORTHAND FOR CONSOLE LOGGING

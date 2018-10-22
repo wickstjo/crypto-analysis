@@ -6,6 +6,45 @@
    <script src="https://d3js.org/d3.v5.min.js"></script>
 </head>
 <body>
+   <table id="settings"><tr><td><div>
+      <table>
+         <tr>
+            <td>From What:</td>
+            <td>
+               <select id="from">
+                  <option>Ethereum</option>
+                  <option>BitCoin</option>
+                  <option>Dollar</option>
+                  <option>Euro</option>
+               </select>
+            </td>
+         </tr>
+      </table>
+      <hr>
+      <table>
+         <tr>
+            <td>To What:</td>
+            <td>
+               <select id="to">
+                  <option>Ethereum</option>
+                  <option selected>BitCoin</option>
+                  <option>Dollar</option>
+                  <option>Euro</option>
+               </select>
+            </td>
+         </tr>
+      </table>
+      <hr>
+      <table>
+         <tr>
+            <td>From date:</td>
+            <td><input type="date" id="limit"></td>
+         </tr>
+      </table>
+   </div></td></tr></table>
+   <div id="tooltip"></div>
+   <div id="innerbody"></div>
 </body>
-<script src="js/script.js"></script>
 <script src="js/misc.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/script.js"></script>
