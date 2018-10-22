@@ -1,8 +1,11 @@
 // GENERATE EXCHANGE CHART & UPDATE DATA OBJECT
 function modules(data, settings) {
 
-   // ESTABLISH CHART MODULES
-   var modules = ['exchange', 'sold'];
+   // ESTABLISH MODULE TYPE AND RELEVANT CURRENCY
+   var modules = [
+      ['exchange', data.query.currency.to],
+      ['sold', data.query.currency.from]
+   ];
 
    // FETCH DOT SIZE BASED ON QUERY LIMIT
    var dot = dotsize(data, settings);
@@ -12,12 +15,12 @@ function modules(data, settings) {
 
       // Y-SCALING
       var yScale = d3.scaleLinear()
-         .domain([0, d3.max(data[mod]) * settings.multiplier])
+         .domain([0, d3.max(data[mod[0]]) * settings.multiplier])
          .range([0, settings.height])
 
       // X-SCALING
       var xScale = d3.scaleTime()
-         .domain([0, data[mod].length - 1])
+         .domain([0, data[mod[0]].length - 1])
          .rangeRound([0, settings.width])
 
       // GENERATE PATH METHOD
@@ -27,27 +30,40 @@ function modules(data, settings) {
          .y1((data) => { return settings.height - yScale(data) })
 
       // CONVERT XY OBJECTS INTO D3 PATHS
-      data.paths[mod] = pathify(data[mod]);
+      data.paths[mod[0]] = pathify(data[mod[0]]);
 
       // GENERATE CANVAS
-      var canvas = d3.select('#' + mod).append('svg')
+      var canvas = d3.select('#' + mod[0]).append('svg')
          .attr('width', settings.width)
          .attr('height', settings.height)
 
       // GENERATE AREA
       canvas.append('path')
-         .attr('fill', settings.background[mod])
+         .attr('fill', settings.background[mod[0]])
          .attr('opacity', settings.opacity)
-         .attr('d', data.paths[mod])
+         .attr('d', data.paths[mod[0]])
 
       // GENERATE DOTS FOR BREAKPOINTS
       canvas.selectAll('circle')
-         .data(data[mod])
+         .data(data[mod[0]])
             .enter().append('circle')
                .attr('cx', (data, i) => { return xScale(i) })
                .attr('cy', (data) => { return settings.height - yScale(data) })
                .attr('r', dot)
-               .attr('fill', settings.dot[mod])
+               .attr('fill', settings.dot[mod[0]])
+               .style('transition', '.2s')
+
+               .on('mouseover', function(d) {
+                  d3.select(this).attr("r", dot * 3)
+                  $('#tooltip').html(formatnum(d, mod[1]))
+                  $('#tooltip').css('opacity', 1)
+                  $('#tooltip').css('left', d3.event.pageX - ($('#tooltip').width() / 1.5) + 'px')
+                  $('#tooltip').css('top', d3.event.pageY + 20 + 'px')
+               }) 
+               .on('mouseout', function() {
+                  d3.select(this).attr("r", dot)
+                  $('#tooltip').css('opacity', 0)
+               })
       });
 
    // RETURN UPDATED DATA OBJECT
@@ -105,6 +121,17 @@ function spread(data, settings) {
 
    // RETURN UPDATED DATA OBJECT
    return data;
+}
+
+// FORMAT NUMBER TO BE MORE READABLE
+function formatnum(num, currency) {
+
+   // IF OVER A THOUSAND, DIVIDE AND ADD 'K'
+   if (num > 999) { num = Math.ceil(num / 1000) + 'K'; }
+
+   // ADD APPROPRIATE CURRENCY SUFFIX & RETURN
+   num = num + ' ' + currency.toUpperCase();
+   return num;
 }
 
 // FIGURE OUT DOTSIZE BASED ON QUERY LIMIT

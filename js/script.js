@@ -13,7 +13,7 @@ var data = {
          from: 'ETH',
          to: 'EUR'
       },
-      days: 75,
+      days: 150,
       timestamp: {
          from: 0,
          to: 0
@@ -29,10 +29,16 @@ d3.json('https://min-api.cryptocompare.com/data/histoday?fsym=' + data.query.cur
    data.query.timestamp.from = response.TimeFrom;
    data.query.timestamp.to = response.TimeTo;
 
-   // APPEND IN DIVS FOR THE GRAPHS
-   $('body').append('<div id="exchange"></div>');
-   $('body').append('<div id="sold"></div>');
-   $('body').append('<div id="spread"></div>');
+   // NECESSARY SELECTORS
+   var selectors = `
+      <div id="exchange"></div>
+      <div id="sold"></div>
+      <div id="spread"></div>
+      <div id="tooltip"></div>
+   `;
+
+   // APPEND THEM IN
+   $('body').append(selectors);
 
    // SETTINGS OBJECT
    var settings = {
@@ -55,9 +61,9 @@ d3.json('https://min-api.cryptocompare.com/data/histoday?fsym=' + data.query.cur
          sold: '#5ECA66'
       },
       radius: {
-         large: 5,
-         medium: 2.5,
-         small: 1.5
+         large: 6,
+         medium: 4,
+         small: 2
       },
       opacity: 0.6,
       multiplier: 1.02

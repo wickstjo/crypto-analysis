@@ -19,3 +19,16 @@ body {
 #spread {
    margin: 0px;
 }
+
+#tooltip {
+   background: black;
+   font: 13px 'Open Sans', verdana;
+   color: white;
+   padding: 6px;
+   width: fit-content;
+   text-align: center;
+   border-radius: 4px;
+   position: absolute;
+   opacity: 0;
+   transition: .2s;
+}
