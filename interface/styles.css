@@ -6,6 +6,14 @@ body {
 	padding: 30px;
 }
 
+table, tr, td {
+   font: 13px 'Open Sans', verdana;
+   padding: 0px;
+   margin: 0px;
+   border-spacing: 0px;
+   color: #F1F1F1;
+}
+
 #exchange, #sold, #spread {
    background: url('img/pattern.png');
    font: 13px 'Open Sans', verdana;
@@ -31,4 +39,12 @@ body {
    position: absolute;
    opacity: 0;
    transition: .2s;
+}
+
+#tooltip table {
+   width: 120px;
+}
+
+#tooltip table td:nth-child(2) {
+   text-align: right;
 }

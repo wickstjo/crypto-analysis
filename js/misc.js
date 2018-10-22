@@ -122,26 +122,47 @@ function spread(data, settings) {
      .data(data.spread.size)
         .enter().append('line')
             .attr('x1', (d, i) => { return xScale(i) })
-            .attr('y1', (d, i) => { return yScale(data.spread.avg[i] - (d * 2)) })
+            .attr('y1', (d, i) => { return yScale(data.spread.avg[i] - (d.difference * 5)) })
             .attr('x2', (d, i) => { return xScale(i) })
-            .attr('y2', (d, i) => { return yScale(data.spread.avg[i] + (d * 2)) })
+            .attr('y2', (d, i) => { return yScale(data.spread.avg[i] + (d.difference * 5)) })
             .attr('stroke', settings.border.color)
             .attr('stroke-width', line)
             .attr('opacity', settings.opacity)
             .style('transition', '.2s')
 
-               .on('mouseover', function(d) {
-                  $('#tooltip').html(d)
-                  $('#tooltip').css('opacity', 1)
-                  $('#tooltip').css('left', d3.event.pageX - ($('#tooltip').width() / 1.5) + 'px')
-                  $('#tooltip').css('top', d3.event.pageY + 20 + 'px')
-               }) 
-               .on('mouseout', function() {
-                  $('#tooltip').css('opacity', 0)
-               })
+            // MOUSEOVER/OUT CONFIG
+            .on('mouseover', function(d) {
+               $('#tooltip').html(textify(d))
+               $('#tooltip').css('opacity', 1)
+               $('#tooltip').css('left', d3.event.pageX - ($('#tooltip').width() / 1.5) + 'px')
+               $('#tooltip').css('top', d3.event.pageY + 20 + 'px')
+            }) 
+            .on('mouseout', function() { $('#tooltip').css('opacity', 0) })
 
    // RETURN UPDATED DATA OBJECT
    return data;
+}
+
+// MAKE TOOLTIP TABLE FOR SPREAD STATS
+function textify(stats) {
+   var tbl = `
+      <table>
+         <tr>
+            <td>High:</td>
+            <td>` + stats.high.toFixed(2) + `</td>
+         </tr>
+         <tr>
+            <td>Median:</td>
+            <td>` + stats.median.toFixed(2) + `</td>
+         </tr>
+         <tr>
+            <td>Low:</td>
+            <td>` + stats.low.toFixed(2) + `</td>
+         </tr>
+      </table>
+   `;
+
+   return tbl;
 }
 
 // FORMAT NUMBER TO BE MORE READABLE

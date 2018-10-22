@@ -73,8 +73,15 @@ d3.json('https://min-api.cryptocompare.com/data/histoday?fsym=' + data.query.cur
    for (var x = 0; x < response.Data.length; x++) {
       data.sold.push(response.Data[x].volumefrom);
       data.exchange.push(response.Data[x].volumeto);
-      data.spread.avg.push((response.Data[x].high + response.Data[x].low) / 2);
-      data.spread.size.push(response.Data[x].high - response.Data[x].low);
+      data.spread.avg.push(response.Data[x].low + ((response.Data[x].high + response.Data[x].low) / 2));
+      data.spread.size.push(
+         {
+            median: response.Data[x].low + ((response.Data[x].high - response.Data[x].low) / 2),
+            high: response.Data[x].high,
+            low: response.Data[x].low,
+            difference: response.Data[x].high - response.Data[x].low
+         }
+      );
    }
 
    // REMOVE LAST ELEMENT, IE TODAYS DATA, FOR READABILITY
