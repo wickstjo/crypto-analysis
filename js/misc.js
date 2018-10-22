@@ -15,7 +15,7 @@ function modules(data, settings) {
 
       // Y-SCALING
       var yScale = d3.scaleLinear()
-         .domain([0, d3.max(data[mod[0]]) * settings.multiplier])
+         .domain([d3.max(data[mod[0]]) * settings.multiplier, 0])
          .range([0, settings.height])
 
       // X-SCALING
@@ -23,11 +23,16 @@ function modules(data, settings) {
          .domain([0, data[mod[0]].length - 1])
          .rangeRound([0, settings.width])
 
+      // Y-AXIS
+      var yAxis = d3.axisRight(yScale)
+         .tickPadding(7)
+         .ticks(3)
+   
       // GENERATE PATH METHOD
       var pathify = d3.area()
          .x((data, i) => { return xScale(i) })
-         .y0(settings.height - yScale(0))
-         .y1((data) => { return settings.height - yScale(data) })
+         .y0(yScale(0))
+         .y1((data) => { return yScale(data) })
 
       // CONVERT XY OBJECTS INTO D3 PATHS
       data.paths[mod[0]] = pathify(data[mod[0]]);
@@ -36,6 +41,11 @@ function modules(data, settings) {
       var canvas = d3.select('#' + mod[0]).append('svg')
          .attr('width', settings.width)
          .attr('height', settings.height)
+
+      canvas.append('g')
+         .attr('class', 'yAxis')
+         .call(yAxis)
+         .style('pointer-events', 'unset')
 
       // GENERATE AREA
       canvas.append('path')
@@ -48,7 +58,7 @@ function modules(data, settings) {
          .data(data[mod[0]])
             .enter().append('circle')
                .attr('cx', (data, i) => { return xScale(i) })
-               .attr('cy', (data) => { return settings.height - yScale(data) })
+               .attr('cy', (data) => { return yScale(data) })
                .attr('r', dot)
                .attr('fill', settings.dot[mod[0]])
                .style('transition', '.2s')
@@ -78,18 +88,18 @@ function spread(data, settings) {
    
    // Y-SCALING
    var yScale = d3.scaleLinear()
-      .domain([0, d3.max(data.spread.avg) * 1.5])
+      .domain([d3.max(data.spread.avg) * 1.5, (d3.max(data.spread.avg) * 0.2) * -1])
       .range([0, settings.height])
 
    // X-SCALING
    var xScale = d3.scaleLinear()
       .domain([0, data.spread.avg.length - 1])
       .rangeRound([0, settings.width])
-
+   
    // GENERATE PATH METHOD
    var pathify = d3.line()
       .x((data, i) => { return xScale(i) })
-      .y((data) => { return settings.height - yScale(data) })
+      .y((data) => { return yScale(data) })
 
    // CONVERT XY OBJECTS INTO D3 PATHS
    data.paths.spread = pathify(data.spread.avg);
@@ -99,25 +109,36 @@ function spread(data, settings) {
       .attr('width', settings.width)
       .attr('height', settings.height)
 
-  // GENERATE PATH
-  canvas.append('path')
-     .attr('fill', 'none')
-     .attr('stroke', settings.border.color)
-     .attr('stroke-width', line)
-     .attr('opacity', settings.opacity)
-     .attr('d', data.paths.spread)
+   // GENERATE PATH
+   canvas.append('path')
+      .attr('fill', 'none')
+      .attr('stroke', settings.border.color)
+      .attr('stroke-width', line)
+      .attr('opacity', settings.opacity)
+      .attr('d', data.paths.spread)
 
    // GENERATE DOTS FOR BREAKPOINTS
    canvas.selectAll('line')
      .data(data.spread.size)
         .enter().append('line')
             .attr('x1', (d, i) => { return xScale(i) })
-            .attr('y1', (d, i) => { return settings.height - yScale(data.spread.avg[i] - (d * 1.5)) })
+            .attr('y1', (d, i) => { return yScale(data.spread.avg[i] - (d * 2)) })
             .attr('x2', (d, i) => { return xScale(i) })
-            .attr('y2', (d, i) => { return settings.height - yScale(data.spread.avg[i] + (d * 1.5)) })
+            .attr('y2', (d, i) => { return yScale(data.spread.avg[i] + (d * 2)) })
             .attr('stroke', settings.border.color)
             .attr('stroke-width', line)
             .attr('opacity', settings.opacity)
+            .style('transition', '.2s')
+
+               .on('mouseover', function(d) {
+                  $('#tooltip').html(d)
+                  $('#tooltip').css('opacity', 1)
+                  $('#tooltip').css('left', d3.event.pageX - ($('#tooltip').width() / 1.5) + 'px')
+                  $('#tooltip').css('top', d3.event.pageY + 20 + 'px')
+               }) 
+               .on('mouseout', function() {
+                  $('#tooltip').css('opacity', 0)
+               })
 
    // RETURN UPDATED DATA OBJECT
    return data;
