@@ -42,7 +42,7 @@ table, tr, td {
    background: black;
    font: 13px 'Open Sans', verdana;
    color: white;
-   padding: 6px;
+   padding: 6px 8px;
    width: fit-content;
    text-align: center;
    border-radius: 4px;
@@ -52,7 +52,7 @@ table, tr, td {
 }
 
 #tooltip table {
-   width: 120px;
+   width: 150px;
 }
 
 #tooltip table td:nth-child(2) {
@@ -92,10 +92,9 @@ table, tr, td {
 
 hr {
    padding: 0px;
-   margin: 15px;
+   margin: 7px;
    border: 0px solid black;
-   border-top: 1px dotted #8E8E8E;
-   border-bottom: 1px dotted #4F4F4F;
+   border-top: 1px solid #8E8E8E;
 }
 
 select, input {

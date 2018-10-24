@@ -63,9 +63,9 @@ function modules(data, settings) {
                .attr('fill', settings.dot[mod[0]])
                .style('transition', '.2s')
 
-               .on('mouseover', function(d) {
+               .on('mouseover', function(d, i) {
                   d3.select(this).attr("r", dot * 3)
-                  $('#tooltip').html(formatnum(d, mod[1]))
+                  $('#tooltip').html(formatnum(d, mod[1], data.dates[i]))
                   $('#tooltip').css('left', d3.event.pageX - ($('#tooltip').width() / 1.5) + 'px')
                   $('#tooltip').css('top', d3.event.pageY + 20 + 'px')
                   $('#tooltip').css('opacity', 1)
@@ -131,8 +131,8 @@ function spread(data, settings) {
             .style('transition', '.2s')
 
             // MOUSEOVER/OUT CONFIG
-            .on('mouseover', (d) => {
-               $('#tooltip').html(textify(d))
+            .on('mouseover', (d, i) => {
+               $('#tooltip').html(textify(d, data.dates[i]))
                $('#tooltip').css('left', d3.event.pageX - ($('#tooltip').width() / 1.5) + 'px')
                $('#tooltip').css('top', d3.event.pageY + 20 + 'px')
                $('#tooltip').css('opacity', 1)
@@ -144,7 +144,7 @@ function spread(data, settings) {
 }
 
 // MAKE TOOLTIP TABLE FOR SPREAD STATS
-function textify(stats) {
+function textify(stats, date) {
    var tbl = `
       <table>
          <tr>
@@ -160,8 +160,8 @@ function textify(stats) {
             <td>` + stats.low.toFixed(2) + `</td>
          </tr>
          <tr>
-            <td>Size:</td>
-            <td>` + stats.difference.toFixed(2) + `</td>
+            <td>Date:</td>
+            <td>` + date + `</td>
          </tr>
       </table>
    `;
@@ -170,7 +170,7 @@ function textify(stats) {
 }
 
 // FORMAT NUMBER TO BE MORE READABLE
-function formatnum(num, currency) {
+function formatnum(num, currency, date) {
 
    // IF OVER A THOUSAND, DIVIDE AND ADD 'K'
    if (num > 999) { num = Math.ceil(num / 1000) + 'K'; }
@@ -179,7 +179,7 @@ function formatnum(num, currency) {
    num = String(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
    // ADD APPROPRIATE CURRENCY SUFFIX & RETURN
-   num = num + ' ' + currency.toUpperCase();
+   num = num + ' ' + currency.toUpperCase() + '<hr>' + date;
    return num;
 }
 
@@ -233,6 +233,14 @@ function convert(currency) {
    // FETCH SHORTHAND & RETURN
    var shorthand = whitelist[currency];
    return shorthand;
+}
+
+// CONVERT UNIX TIMESTAMP TO READABLE DATE
+function convert_unix(timestamp) {
+   timestamp = timestamp * 1000;
+   var s = new Date(timestamp).toLocaleDateString('en-GB');
+
+   return s;
 }
 
 // SHORTHAND FOR CONSOLE LOGGING

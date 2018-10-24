@@ -5,6 +5,7 @@ function charts(_from, _to, _limit) {
       raw: {},
       exchange: [],
       sold: [],
+      dates: [],
       spread: {
          avg: [],
          size: []
@@ -74,6 +75,7 @@ function charts(_from, _to, _limit) {
       for (var x = 0; x < response.Data.length; x++) {
          data.sold.push(response.Data[x].volumefrom);
          data.exchange.push(response.Data[x].volumeto);
+         data.dates.push(convert_unix(response.Data[x].time));
          data.spread.avg.push(response.Data[x].low + ((response.Data[x].high + response.Data[x].low) / 2));
          data.spread.size.push(
             {
