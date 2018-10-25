@@ -49,6 +49,7 @@ table, tr, td {
    position: absolute;
    opacity: 0;
    transition: .2s;
+   pointer-events: none;
 }
 
 #tooltip table {

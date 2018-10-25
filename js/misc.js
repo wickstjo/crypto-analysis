@@ -94,8 +94,8 @@ function spread(data, settings) {
    // X-SCALING
    var xScale = d3.scaleLinear()
       .domain([0, data.spread.avg.length - 1])
-      .rangeRound([0, settings.width])
-   
+      .rangeRound([0, settings.width]) 
+
    // GENERATE PATH METHOD
    var pathify = d3.line()
       .x((data, i) => { return xScale(i) })
